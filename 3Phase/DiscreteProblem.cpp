@@ -49,7 +49,7 @@ const std::vector<double> &vKZ)
 	const double r2 = vKX[mWells[0].loc]/vKY[mWells[0].loc];
 	const double ro = 0.28 * std::sqrt( std::sqrt(r1)*DX*DX + std::sqrt(r2)*DY*DY )/ ( std::pow(r1,0.25) + std::pow(r2,0.25) );
 	mWells[0].WI  = 0.001127 * 6.2832 * Kh / log( ro / 0.5 );
-	mWells[0].Pbh = 5000;
+	mWells[0].Pbh = 4000;
 
 	std::cout << "KH = " << Kh << std::endl;
 	std::cout << "WI = " << mWells[0].WI << std::endl;   
@@ -110,10 +110,25 @@ DiscreteProblem::discretize(const DiscreteProblem::StateVector &state, double DT
 		if (!std::isfinite(mResidual[eqn2].value())) is_badvalue = true;
 		if (!std::isfinite(mResidual[eqn3].value())) is_badvalue = true;
 	}
+	
+	// add left const pressure BC
+	double P_const = 4000;
 	std::size_t eqn1 = eqnID(0, PhaseID::O);
 	std::size_t eqn2 = eqnID(0, PhaseID::W);
 	std::size_t eqn3 = eqnID(0, PhaseID::G);
-	/*mResidual[equ1]+= mDT**/
+	
+	for (std::size_t ph = 0; ph < 3; ++ph){
+		mFace_BC.L[ph] = mCells[0].bmu[ph]*mCells[0].Kr[ph];
+		mFace_BC.Pot[ph] = mCells[0].P[ph] - P_const;
+	}
+		
+	mResidual[eqn1] += mDT*mFace_BC.T*mFace_BC.L[PhaseID::O] * mFace_BC.Pot[PhaseID::O];
+	mResidual[eqn2] += mDT*mFace_BC.T*mFace_BC.L[PhaseID::W] * mFace_BC.Pot[PhaseID::W];
+	mResidual[eqn3] = mResidual[eqn3] + 
+		mDT*mFace_BC.T*mFace_BC.L[PhaseID::G] * mFace_BC.Pot[PhaseID::G] + 
+		mDT*mFace_BC.T*mFace_BC.L[PhaseID::O] * mFace_BC.Pot[PhaseID::O]*mCells[0].Rso;
+	
+		
 	return is_badvalue;
 }
 
@@ -172,6 +187,15 @@ const std::vector<double> & KZ)
 		const double beta = DX*0.5 / A*(1.0 / kl + 1.0 / kr);
 		mFaces[f].T = 0.00112712 / beta;
 	}
+
+
+	// initialize transmissibility for Boundary face
+	const double kl = 1000;
+	const double kr = KX[0];
+	const double DX = norm(mMesh.cell_coord(0) - mMesh.cell_coord(1));
+	const double A = mMesh.face_measure(0);
+	const double beta = DX*0.5 / A*(1.0 / kl + 1.0 / kr);
+	mFace_BC.T = 0.00112712 / beta;
 };
 
 void
@@ -182,9 +206,6 @@ DiscreteProblem::compute_cell_properties(const DiscreteProblem::StateVector &sta
 		mPropCalc.calculate(mPhi_ref[c], state[c], mCells[c]);
 	}
 
-//--------------##modify##----------------
-	//for (std::size_t ph = 0; ph < 3; ++ph)
-	//	mCells[0].P[ph] = 5000;
 }
 
 void
@@ -229,12 +250,11 @@ DiscreteProblem::compute_flow()
 	compute_wells();
 }
 
+
+//--update: p, Pot and L
 void
 DiscreteProblem::compute_face_properties()
 {
-	//-----------------##modify##------------------
-	//for (std::size_t ph = 0; ph < 3; ++ph)
-	//	mCells[0].P[ph] = 5000;
 
 	for (std::size_t f = 0; f < mMesh.size_faces(); ++f)
 	{
@@ -254,6 +274,10 @@ DiscreteProblem::compute_face_properties()
 			else
 				mFaces[f].L[ph] *= mCells[c1].Kr[ph];
 		}
+		
+
+		// update L and Pot for const Boundary
+
 		mFaces[f].Rso = 0.5 * (mCells[c2].Rso + mCells[c1].Rso);
 	}
 }

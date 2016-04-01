@@ -1,4 +1,4 @@
-﻿Build started 3/31/2016 11:39:10 AM.
+﻿Build started 3/31/2016 6:12:25 PM.
      1>Project "C:\Users\yuz899\Google Drive\optimization\Simulator\BlackOil\3Phase\3Phase\3Phase.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt DiscreteProblem.cpp
@@ -11,4 +11,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.63
+Time Elapsed 00:00:02.86

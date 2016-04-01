@@ -151,6 +151,8 @@ public:
 	adetl::ADvector     mResidual;
 	double              mDT;
 	adetl::ADscalar<>   mTmpVars[3];
+
+	FaceProps	mFace_BC;	//set T,L,Pot at function(initialize_transmissibility() and compute_face_properties())
 };
 
 std::ostream &
